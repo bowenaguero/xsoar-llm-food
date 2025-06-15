@@ -1,0 +1,243 @@
+
+Skip to main content
+⭐️ If you like Cortex XSOAR Content, give it a star on GitHub! ⭐
+Cortex XSOAR for Developers (Formerly Demisto)
+Developer Docs
+Articles
+Reference
+Marketplace
+Products
+
+Partners
+
+Blog
+Cortex XSOAR for Developers (Formerly Demisto)
+
+    Welcome
+    Getting Started
+        Getting Started Guide
+        Cortex XSOAR Concepts
+        Design
+            Design Your Contribution
+            Use Cases
+            Design Best Practices
+        Developing
+            Cortex XSOAR IDE
+            PyCharm IDE Plugin
+            VSCode Extension
+            Development Setup
+        Frequently Asked Questions
+    Contributing
+        Contributing XSOAR Content
+        Contribution Requirements
+        Contribution Checklist
+        Pull Request Conventions
+        Documentation Contributions
+        Contributing Through Cortex XSOAR Marketplace
+        Contribution Demo Preparation
+        Contribution SLA
+        Contributing to Demisto SDK
+    Content Packs
+        Content Packs Structure
+        Pack Documentation
+        Release Notes
+    Integrations & Scripts
+        Components
+            Directory Structure
+            Metadata YAML File
+            Parameter Types
+            Integration Description File
+            Integration Logo Standards
+            README File
+        Developing
+            Python Code Conventions
+            Fetching Incidents
+            Context and Outputs
+            Context Standards
+                About Context Standards
+                Mandatory Context Standards
+                Recommended Context Standards
+            Generic Commands
+                About Generic Commands
+                Generic Reputation Commands
+                Generic Endpoint Command
+            Reputation and DBotScore
+            Using Docker
+            Builtins
+                Get Entries Filter
+                task Complete
+                reopen Investigation
+        Testing
+            Linting
+            Unit Testing
+            Test Playbooks
+            Debugging
+        Advanced Topics
+            Feed Integrations
+            Event Collection Integrations
+            Developing an IAM Integration
+            PowerShell
+            Fetching Credentials
+            Long Running Containers
+            Cortex XSOAR Transform Language (DT)
+            Integration Cache
+            Mirroring Integration
+            Integration Code Generator
+            Scheduled Commands
+            Generate YML from Python
+            Fetch Missing Incidents with Generic Lookback Methods
+            Trust Any Certificate
+    Playbooks
+        Playbooks
+        Playbook Contribution Guide
+        Create Playbooks
+        Playbook Settings
+        Playbook Conventions
+        Inputs and Outputs
+        Extend Context
+        Create a Playbook Task
+        Create a Conditional Task
+        Communication Tasks
+        Create a Communication Task
+        Customize a Communication Task Message
+        Generic Polling
+        Playbook Task Field Reference
+        Generic Playbooks
+        Playbook Documentation
+    Incidents, Fields & Layouts
+        Cortex XSOAR Incident Lifecycle
+        Working with Incident Types
+        Convert Layout Files from Cortex XSOAR 5.5
+        Working with Incident Fields
+        Jobs
+        Classification and Mapping
+        Pre-processing Rules
+        Lists
+    Indicators, Fields & Layouts
+        Indicator Fields
+        URL Extraction
+        Domain Extraction
+        Relationships
+    Documentation
+        Documentation Best Practices
+        Pack Documentation
+        Pack Release Notes
+        README File
+        Integration Description File
+        Images in Documentation Files
+    Tutorials
+        Set Up Your Dev Environment
+        Set Up Your GitHub Codespace Environment
+        Set Up Your Containerized Development Environment
+        Contribution Design
+        Create an Integration
+    Privacy Statement
+
+Integrations and Scripts Parameter Types
+
+Integration Parameter Types are used to configure instances of the integration. When adding a parameter to an integration in Cortex XSOAR, there are numerous types to choose from. Each type will affect the parameter behavior and interaction with the user. See here for more information how to set the parameter type.
+Boolean#
+
+This type of parameter creates a checkbox in the integration configuration. When the checkbox is ticked, the value in the integration code is True, and False otherwise. The type number is: 8.
+
+image
+
+image
+
+Access: demisto.params().get('proxy')
+Short Text#
+
+This type of parameter is used for short input parameters, such as server URLs, ports or queries. It creates a small sized text box in the integration configuration. The type number is: 0.
+
+image
+
+image
+
+Access: demisto.params().get('url')
+Long Text#
+
+This type of parameter is used for long text inputs, such as certificates. It creates a large sized text box in the integration configuration. The type number is: 12.
+
+image
+
+image
+
+Access: demisto.params().get('cert')
+Short Encrypted#
+
+This type of parameter is used for encrypted inputs, such as API tokens. This should not be used for username-password credentials however. It creates a small sized text box with an encrypted text, which would also be stored encrypted in the database. The type number is: 4.
+
+image
+
+image
+
+Access: demisto.params().get('token')
+Long Encrypted#
+
+This type of parameter is used for long encrypted inputs, such as certificates. It creates a text-area with encrypted text. The text would also be stored encrypted in the database. The type number is: 14.
+
+image
+
+Access: demisto.params().get('cert')
+Authentication#
+
+This type of parameter is used for username-password credentials - username as plain text and an encrypted password. It supports retrieving credentials from the Cortex XSOAR credentials store (more info on the credentials store can be found in the Cortex XSOAR support portal). The type number is: 9.
+
+image
+
+image
+
+Access:
+
+Username: demisto.params().get('credentials', {}).get('identifier')
+
+Password: demisto.params().get('credentials', {}).get('password')
+Single Select#
+
+This type of parameter is used to allow selecting a single input from a list of allowed inputs. The type number is: 15.
+
+image
+
+image
+
+Access: demisto.params().get('log')
+Multi Select#
+
+This type of parameter is used to allow selecting multiple inputs from a list of allowed inputs. The type number is: 16.
+
+image
+
+image
+
+Access: demisto.params().get('sort')
+Important Note#
+
+Once a parameter is set in an integration configuration, it is saved to the Cortex XSOAR database, so before changing an existing parameter, you have to consider the existing values (backward compatibility). For example, when adding a parameter with a default value to an existing integration, make sure you add the default value in the code as well as in the yml (As it wont be added to existing instances).
+Edit this page
+Last updated on 8/11/2024
+Previous
+« Integrations and Scripts Metadata YAML File
+Next
+Integration Description File »
+
+    Boolean
+    Short Text
+    Long Text
+    Short Encrypted
+    Long Encrypted
+    Authentication
+    Single Select
+    Multi Select
+    Important Note
+
+Docs
+
+    Developer Docs
+    Become a Technology Partner
+
+Social
+
+    Blog
+
+Palo Alto Networks for Developers
+Copyright © 2025 Palo Alto Networks, Inc.

@@ -1,0 +1,325 @@
+
+Skip to main content
+⭐️ If you like Cortex XSOAR Content, give it a star on GitHub! ⭐
+Cortex XSOAR for Developers (Formerly Demisto)
+Developer Docs
+Articles
+Reference
+Marketplace
+Products
+
+Partners
+
+Blog
+Cortex XSOAR for Developers (Formerly Demisto)
+
+    Welcome
+    Getting Started
+        Getting Started Guide
+        Cortex XSOAR Concepts
+        Design
+            Design Your Contribution
+            Use Cases
+            Design Best Practices
+        Developing
+            Cortex XSOAR IDE
+            PyCharm IDE Plugin
+            VSCode Extension
+            Development Setup
+        Frequently Asked Questions
+    Contributing
+        Contributing XSOAR Content
+        Contribution Requirements
+        Contribution Checklist
+        Pull Request Conventions
+        Documentation Contributions
+        Contributing Through Cortex XSOAR Marketplace
+        Contribution Demo Preparation
+        Contribution SLA
+        Contributing to Demisto SDK
+    Content Packs
+        Content Packs Structure
+        Pack Documentation
+        Release Notes
+    Integrations & Scripts
+        Components
+            Directory Structure
+            Metadata YAML File
+            Parameter Types
+            Integration Description File
+            Integration Logo Standards
+            README File
+        Developing
+            Python Code Conventions
+            Fetching Incidents
+            Context and Outputs
+            Context Standards
+                About Context Standards
+                Mandatory Context Standards
+                Recommended Context Standards
+            Generic Commands
+                About Generic Commands
+                Generic Reputation Commands
+                Generic Endpoint Command
+            Reputation and DBotScore
+            Using Docker
+            Builtins
+                Get Entries Filter
+                task Complete
+                reopen Investigation
+        Testing
+            Linting
+            Unit Testing
+            Test Playbooks
+            Debugging
+        Advanced Topics
+            Feed Integrations
+            Event Collection Integrations
+            Developing an IAM Integration
+            PowerShell
+            Fetching Credentials
+            Long Running Containers
+            Cortex XSOAR Transform Language (DT)
+            Integration Cache
+            Mirroring Integration
+            Integration Code Generator
+            Scheduled Commands
+            Generate YML from Python
+            Fetch Missing Incidents with Generic Lookback Methods
+            Trust Any Certificate
+    Playbooks
+        Playbooks
+        Playbook Contribution Guide
+        Create Playbooks
+        Playbook Settings
+        Playbook Conventions
+        Inputs and Outputs
+        Extend Context
+        Create a Playbook Task
+        Create a Conditional Task
+        Communication Tasks
+        Create a Communication Task
+        Customize a Communication Task Message
+        Generic Polling
+        Playbook Task Field Reference
+        Generic Playbooks
+        Playbook Documentation
+    Incidents, Fields & Layouts
+        Cortex XSOAR Incident Lifecycle
+        Working with Incident Types
+        Convert Layout Files from Cortex XSOAR 5.5
+        Working with Incident Fields
+        Jobs
+        Classification and Mapping
+        Pre-processing Rules
+        Lists
+    Indicators, Fields & Layouts
+        Indicator Fields
+        URL Extraction
+        Domain Extraction
+        Relationships
+    Documentation
+        Documentation Best Practices
+        Pack Documentation
+        Pack Release Notes
+        README File
+        Integration Description File
+        Images in Documentation Files
+    Tutorials
+        Set Up Your Dev Environment
+        Set Up Your GitHub Codespace Environment
+        Set Up Your Containerized Development Environment
+        Contribution Design
+        Create an Integration
+    Privacy Statement
+
+Fetching Incidents
+
+Cortex XSOAR pulls events from third party tools and converts them into incidents using the fetch-incidents command.
+
+This topic provides:
+
+    A description of the fetching command and parameters
+    A description of creating fetched incidents in Cortex XSOAR
+    An explanation of how missing incidents are fetched with generic lookback methods
+    Troubleshooting tips
+
+fetch-incidents Command#
+
+The fetch-incidents command is the function that Cortex XSOAR calls to import new incidents. It is triggered by the Fetches incidents parameter in the integration configuration. It is not necessary to configure the fetch-incidents command in the integration settings.
+
+When you select the Fetch incidents parameter in the integration configuration, you should also configure the incidentFetchInterval parameter (displayed as Incidents Fetch Interval in the integration configuration window). This controls how often the integration will perform a fetch_incidents command. The default is 1 minute.
+
+screen shot 2023-09-20
+
+Open the fetch-incidents command. Make sure the command is also referenced in the execution block.
+def fetch_incidents():
+      # your implementation here
+
+
+if demisto.command() == 'fetch-incidents':
+      fetch_incidents()
+
+Last Run#
+
+The demisto.getLastRun() function retrieves the last previous run time.
+This helps avoid duplicate incidents by fetching only events that occurred since the last time the function was run.
+    # demisto.getLastRun() will returns an obj with the previous run in it.
+    last_run = str(demisto.getLastRun())
+
+Note:
+The value of demisto.getLastRun() is not stored between CLI command runs; it is only stored in the incident fetch flow on the server side. Therefore, if you print out the value of demisto.getLastRun() in the integration code, its value will appear as {}.
+
+For debugging, you can save the value of demisto.getLastRun() to integration context, which does persist between CLI command runs. Alternatively, you can run the fetch_incidents() command twice within the same command run.
+First Run#
+
+When an integration runs for the first time, the last run time is not in the integration context.
+To set up the first run properly, use an if statement with a time that is specified in the integration settings.
+
+It is best practice to specify how far back in time to fetch incidents on the first run. This is a configurable parameter in the integration settings.
+
+Make sure that first_fetch parameter exist in the integration yml file.
+Query and Parameters#
+
+Queries and parameters enable filtering events.
+For example, you may want to import only certain event types into Cortex XSOAR. To do this, you need to query the API for only that specific event type. These are configurable parameters in the integration settings.
+Example#
+
+The following example uses the First Run if statement and query.
+    # usually there will be some kind of query based on event creation date, 
+    # or get all the events with id greater than X id and their status is New
+    query = 'status=New'
+
+    day_ago = datetime.now() - timedelta(days=1) 
+    start_time = day_ago.time()
+    if last_run and 'start_time' in last_run:
+        start_time = last_run.get('start_time')
+
+    # execute the query and get the events
+    events = query_events(query, start_time)
+Fetch Limit#
+
+The Fetch Limit parameter sets the maximum number of incidents to get per fetch command. To maintain an optimal load on Cortex XSOAR we recommend setting a limit of 200 incidents per fetch.
+Note: Make sure that the max_fetch parameter exist in the integration yml file and it has a default value. If you enter a larger number or leave Fetch Limit blank, the Test button will fail.
+Create an Incident#
+
+Incidents are created by building an array of incident objects. These objects must contain:
+
+    The name of the incident
+    When the incident occurred
+    The rawJSON key for the incident
+
+Recommended to include:
+
+    details - a brief description of the incident.
+    dbotMirrorId - the ID of the incident in the third-party product (see Fetch History).
+
+Example#
+# convert the events to Cortex XSOAR incident 
+events = [
+  {
+      'name': 'event_1',
+      'create_time': '2019-10-23T10:11:00Z',
+      'event_id': 100
+  }
+]
+    
+incidents = []
+for event in events:
+    incident = {
+        'name': event['name'],        # name is required field, must be set
+        'occurred': event['create_time'], # must be string of a format ISO8601
+        'dbotMirrorId': str(event['event_id']),  # must be a string
+        'rawJSON': json.dumps(event)  # the original event, this will allow mapping of the event in the mapping stage. Don't forget to `json.dumps`
+    }
+    incidents.append(incident)
+rawJSON#
+
+The rawJSON key in the incident field enables event mapping. Mapping is how an event gets imported into Cortex XSOAR and enables you to choose which data from the event is to be mapped to Cortex XSOAR fields.
+Example#
+incident = {
+    'name': event['name'],        # name is required field, must be set
+    'occurred': '2019-10-23T10:00:00Z', # occurred is optional date - must be string of a format ISO8601
+    'rawJSON': json.dumps(event)  # set the original event to rawJSON, this will allow mapping of the event. Don't forget to `json.dumps`
+}
+Set Last Run#
+
+When the last events are retrieved, you need to save the new last run time to the integration context. This timestamp will be used the next time the fetch-incidents function runs.
+Notes:
+
+    When setting demisto.setLastRun, the values of the dictionary must be type string.
+    We recommend using the time of the most recently created incident as the new last run.
+    If there is an error pulling incidents with fetch-incidents, demisto.setLastRun will not execute.
+
+demisto.setLastRun({
+    'start_time': timestamp_to_datestring(last_incident['time'])
+})
+Send the Incidents to Cortex XSOAR#
+
+When all of the incidents are created, the demisto.incidents() function returns an array of incidents in Cortex XSOAR.
+This is similar to the demisto.results() function, but is used exclusively to handle incident objects.
+Example#
+# this command will create incidents in Cortex XSOAR
+demisto.incidents(incidents)
+
+If there are no incidents to return, demisto.incidents() returns an empty list.
+# returning an empty list will keep the status as ok but no new incidents are created.
+demisto.incidents([])
+Fetch History#
+
+In XSOAR versions 6.8 and above, it is possible to observe the results of the last fetch-incidents/fetch-indicators runs using the Fetch History modal. For more details, visit the Fetch History documentation.
+
+When implementing a fetch-incidents command, in some cases we can populate extra data for the following columns in the modal:
+
+    Message - In long-running integrations, the info/error message given in demisto.updateModuleHealth() will be displayed in the Message column. Use the is_error boolean argument of this method to determine the message type. For example:
+    demisto.updateModuleHealth("Could not connect to client.", is_error=True)
+
+The above line will produce a new record in the modal, and its Message value will be Error: Could not connect to client..
+
+Source IDs - If incidents on the third-party product have IDs, it is possible to display them in the Source IDs column by adding the dbotMirrorId field as part of the incident dictionary. For example:
+demisto.incidents([
+    {"name": "This is an incident.", "dbotMirrorId": "123"},
+    {"name": "This is another incident.", "dbotMirrorId": "124"},
+])
+
+    The above will produce a new record in the modal, and its Source IDs value will be 123, 124.
+
+    Note: the population of the fetch history information occurs before the classification, therefore this field must be defined at the integration code level rather than the classification and mapping level.
+
+Fetch Missing Incidents with Generic Lookback Methods#
+
+This advanced feature uses generic lookback methods for fetching missing incidents because of indexing issues in the 3rd party product. For more information click here.
+Troubleshooting#
+
+To troubleshoot fetch-incident, execute !integration_instance_name-fetch debug-mode=true in the Playground to return the incidents.
+Edit this page
+Last updated on 8/11/2024
+Previous
+« Python Code Conventions
+Next
+Context and Outputs »
+
+    fetch-incidents Command
+    Last Run
+    First Run
+    Query and Parameters
+        Fetch Limit
+    Create an Incident
+        rawJSON
+        Set Last Run
+        Send the Incidents to Cortex XSOAR
+    Fetch History
+    Fetch Missing Incidents with Generic Lookback Methods
+    Troubleshooting
+
+Docs
+
+    Developer Docs
+    Become a Technology Partner
+
+Social
+
+    Blog
+
+Palo Alto Networks for Developers
+Copyright © 2025 Palo Alto Networks, Inc.
